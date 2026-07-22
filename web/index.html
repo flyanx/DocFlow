@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocFlow</title>
+<style>
+:root{
+    --primary:#0076C0;--primary-hover:#005a8e;--primary-light:#e6f2fa;
+    --bg:#f0f4f8;--surface:#ffffff;--border:#dce3ea;--border-light:#e8edf2;
+    --text:#1a2b3c;--text-secondary:#5a6c7e;--text-muted:#8a9aab;
+    --success:#16a34a;--success-bg:#dcfce7;
+    --error:#dc2626;--error-bg:#fef2f2;
+    --warning:#d97706;--warning-bg:#fffbeb;
+    --radius:8px;--radius-sm:6px;--radius-lg:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100vh;overflow:hidden;background:var(--bg);color:var(--text);
+    font-family:-apple-system,'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;
+    font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+.app{display:flex;flex-direction:column;height:100vh;}
+
+/* Header */
+.header{display:flex;align-items:center;gap:12px;padding:0 28px;height:56px;
+    background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.header .logo{width:28px;height:28px;border-radius:6px;flex-shrink:0;}
+.header .brand{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.02em;}
+.header .brand .accent{color:var(--primary);}
+.header .tagline{font-size:12px;color:var(--text-muted);}
+.header .spacer{flex:1;}
+
+/* Language toggle */
+.lang-toggle{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.lang-toggle button{border:none;background:var(--surface);padding:5px 14px;font-size:12px;
+    font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .15s;font-family:inherit;}
+.lang-toggle button.active{background:var(--primary);color:#fff;}
+
+/* Main */
+.main{display:flex;gap:20px;flex:1;min-height:0;padding:20px 28px;}
+
+/* Left panel */
+.left-panel{width:360px;flex-shrink:0;display:flex;flex-direction:column;gap:18px;overflow-y:auto;}
+
+.section-label{font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;
+    display:flex;align-items:center;justify-content:space-between;}
+.section-label .count{font-weight:400;font-size:11px;}
+
+/* Drop zone */
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius);background:var(--surface);
+    padding:20px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--primary);background:var(--primary-light);}
+.drop-zone .drop-title{font-size:13px;font-weight:500;color:var(--text-secondary);}
+.drop-zone .drop-hint{font-size:11px;color:var(--text-muted);margin-top:4px;}
+
+/* File list */
+.file-list{max-height:120px;overflow-y:auto;margin-top:8px;}
+.file-list:empty{display:none;}
+.file-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface);
+    border:1px solid var(--border-light);border-radius:var(--radius-sm);margin-bottom:4px;font-size:12px;}
+.file-item .ext{font-size:9px;font-weight:600;text-transform:uppercase;background:var(--border-light);
+    color:var(--text-secondary);padding:2px 5px;border-radius:3px;flex-shrink:0;}
+.file-item .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);}
+.file-item .remove{color:var(--text-muted);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;
+    transition:color .15s;font-family:inherit;background:none;border:none;}
+.file-item .remove:hover{color:var(--error);}
+
+/* Mode toggle */
+.mode-toggle{display:flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.mode-toggle button{flex:1;border:none;padding:8px 0;font-size:13px;font-weight:500;
+    color:var(--text-secondary);background:var(--surface);cursor:pointer;transition:all .15s;font-family:inherit;}
+.mode-toggle button.active{background:var(--primary);color:#fff;}
+.mode-toggle button:disabled{opacity:.4;cursor:not-allowed;}
+.mode-hint{font-size:11px;color:var(--text-muted);line-height:1.4;margin-top:6px;}
+
+/* Path */
+.path-row{display:flex;gap:6px;}
+.path-row input{flex:1;min-width:0;height:36px;border:1px solid var(--border);border-radius:var(--radius-sm);
+    padding:0 12px;font-size:13px;color:var(--text);background:var(--surface);font-family:inherit;}
+.path-row input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-light);}
+.path-row input:disabled{background:var(--bg);cursor:not-allowed;}
+.path-btn{height:36px;padding:0 14px;border:1px solid var(--border);border-radius:var(--radius-sm);
+    background:var(--surface);font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;
+    white-space:nowrap;transition:all .15s;font-family:inherit;}
+.path-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary);}
+.path-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Convert button */
+.convert-btn{height:44px;border:none;border-radius:var(--radius);background:var(--primary);color:#fff;
+    font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,box-shadow .15s;
+    font-family:inherit;letter-spacing:.01em;margin-top:4px;}
+.convert-btn:hover:not(:disabled){background:var(--primary-hover);box-shadow:0 4px 12px rgba(0,118,192,.2);}
+.convert-btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;}
+
+/* GPU status */
+.gpu-status{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;}
+.gpu-status .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.gpu-status .dot.on{background:var(--success);}
+.gpu-status .dot.off{background:var(--text-muted);}
+
+/* Right panel */
+.right-panel{flex:1;display:flex;flex-direction:column;min-width:0;}
+.right-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.right-header .label{font-size:12px;font-weight:600;color:var(--text-muted);}
+.status-badge{font-size:11px;font-weight:500;padding:2px 10px;border-radius:12px;
+    background:var(--border-light);color:var(--text-secondary);transition:all .2s;}
+.status-badge.processing{background:var(--primary-light);color:var(--primary);}
+.status-badge.done{background:var(--success-bg);color:var(--success);}
+.status-badge.error{background:var(--error-bg);color:var(--error);}
+
+.right-body{flex:1;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);
+    overflow-y:auto;padding:8px;transition:border-color .2s;}
+
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;
+    color:var(--text-muted);gap:8px;}
+.empty-state .text{font-size:13px;}
+
+/* ── Per-file result items ── */
+.file-result{display:flex;flex-direction:column;padding:10px 12px;border-radius:var(--radius-sm);
+    margin-bottom:3px;background:var(--surface);border:1px solid var(--border-light);transition:all .15s;}
+.file-result:hover{border-color:var(--border);}
+.file-result .top{display:flex;align-items:center;gap:10px;}
+.file-result .status-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;font-size:13px;font-weight:700;}
+.file-result .status-icon.waiting{color:var(--text-muted);}
+.file-result .status-icon.processing{color:var(--primary);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.file-result .status-icon.processing .spinner{display:inline-block;width:14px;height:14px;
+    border:2px solid var(--primary-light);border-top-color:var(--primary);border-radius:50%;
+    animation:spin .8s linear infinite;}
+.file-result .status-icon.success{color:var(--success);}
+.file-result .status-icon.fail{color:var(--error);}
+.file-result .fname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;}
+.file-result .status-text{font-size:11px;color:var(--text-muted);flex-shrink:0;}
+.file-result .detail{font-size:11px;color:var(--text-muted);margin-top:4px;padding-left:28px;line-height:1.4;}
+.file-result .detail.error{color:var(--error);background:var(--error-bg);padding:4px 8px;border-radius:var(--radius-sm);
+    margin-top:4px;margin-left:28px;word-break:break-word;}
+
+/* Skip hint */
+.skip-hint{color:var(--warning);font-size:12px;margin-bottom:6px;padding:6px 10px;
+    background:var(--warning-bg);border-radius:var(--radius-sm);line-height:1.4;}
+
+/* Progress */
+.progress-wrap{margin-top:8px;}
+.progress-bar{height:4px;background:var(--border-light);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--primary);border-radius:2px;transition:width .3s ease;}
+.progress-text{font-size:11px;color:var(--text-muted);margin-top:4px;}
+
+/* Output link */
+.output-link{margin-top:8px;font-size:11px;color:var(--text-muted);padding:0 4px;}
+.output-link a{color:var(--primary);text-decoration:none;cursor:pointer;}
+.output-link a:hover{text-decoration:underline;}
+
+/* Footer */
+.footer{text-align:center;padding:6px 28px;font-size:11px;color:var(--text-muted);flex-shrink:0;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
+</style>
+</head>
+<body>
+<div class="app">
+    <!-- Header -->
+    <header class="header">
+        <img src="/icon" class="logo" alt="DocFlow">
+        <div class="brand">Doc<span class="accent">Flow</span></div>
+        <div class="tagline" data-i18n="tagline"></div>
+        <div class="spacer"></div>
+        <div class="lang-toggle">
+            <button class="active" data-lang="zh" onclick="setLang('zh')">中文</button>
+            <button data-lang="en" onclick="setLang('en')">EN</button>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <div class="main">
+        <!-- Left panel -->
+        <aside class="left-panel">
+            <div class="section">
+                <div class="section-label">
+                    <span data-i18n="section_files"></span>
+                    <span class="count" id="fileCount"></span>
+                </div>
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-title" data-i18n="drop_title"></div>
+                    <div class="drop-hint" data-i18n="drop_hint"></div>
+                </div>
+                <div class="file-list" id="fileList"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-label"><span data-i18n="mode_label"></span></div>
+                <div class="mode-toggle">
+                    <button class="active" data-mode="standard" data-i18n="mode_standard"></button>
+                    <button data-mode="enhanced" data-i18n="mode_enhanced"></button>
+                </div>
+                <div class="mode-hint" id="modeHint"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-label"><span data-i18n="path_label"></span></div>
+                <div class="path-row">
+                    <input type="text" id="outputPath" value="">
+                    <button class="path-btn" id="browseBtn" data-i18n="browse"></button>
+                    <button class="path-btn" id="openBtn" data-i18n="open"></button>
+                </div>
+            </div>
+
+            <button class="convert-btn" id="convertBtn" data-i18n="convert"></button>
+            <div class="gpu-status" id="gpuStatus"></div>
+        </aside>
+
+        <!-- Right panel -->
+        <section class="right-panel">
+            <div class="right-header">
+                <div class="label" data-i18n="results"></div>
+                <div class="status-badge" id="statusBadge" data-i18n="status_idle"></div>
+            </div>
+            <div class="right-body" id="rightBody">
+                <div class="empty-state">
+                    <div class="text" data-i18n="status_ready"></div>
+                </div>
+            </div>
+            <div class="progress-wrap" id="progressWrap" style="display:none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width:0%;"></div>
+                </div>
+                <div class="progress-text" id="progressText"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" data-i18n="footer"></footer>
+</div>
+
+<input type="file" id="fileInput" multiple style="display:none;"
+       accept=".pdf,.docx,.doc,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif">
+
+<script>
+// ── State ──
+let currentLang='zh',selectedFiles=[],currentMode='standard',isConverting=false,pollTimer=null;
+let gpuInfo={available:false,name:''},currentStatus='idle';
+
+// ── i18n ──
+const I18N={
+    zh:{
+        tagline:'轻松转为 DOCX',
+        section_files:'添加文件',file_count:'个文件',
+        drop_title:'点击或拖拽文件到此处',
+        drop_hint:'支持 PDF、DOCX、XLS、XLSX、JPG、PNG 等格式',
+        mode_label:'转换模式',mode_standard:'标准模式',mode_enhanced:'增强模式',
+        mode_hint_standard:'保留原图 + OCR 文字识别，任何电脑可用',
+        mode_hint_enhanced:'额外增加 AI 图片描述，需要 NVIDIA 显卡（10GB+ 显存）',
+        path_label:'输出路径',browse:'浏览',open:'打开',
+        convert:'开始转换',converting:'转换中...',browsing:'选择中...',
+        results:'转换结果',
+        status_idle:'空闲',status_processing:'处理中',status_done:'完成',status_error:'失败',
+        status_ready:'就绪，请上传文件',status_no_files:'请先添加文件',
+        status_no_valid:'没有有效的文件',
+        status_enhanced_unavailable:'当前电脑不支持增强模式，请使用标准模式',
+        status_output:'输出目录',result_success:'成功',result_fail:'失败',
+        skip_doc_hint:'已跳过 .doc 文件，请先在 Word 中另存为 .docx 格式',
+        gpu_available:'增强模式可用',gpu_unavailable:'仅标准模式可用',
+        file_waiting:'等待中',file_processing:'处理中',file_success:'转换完成',file_fail:'转换失败',
+        footer:'DocFlow — 所有处理均在本地完成，文档不会上传到任何服务器',
+    },
+    en:{
+        tagline:'Convert to DOCX with Ease',
+        section_files:'Files',file_count:'files',
+        drop_title:'Click or drag files here',
+        drop_hint:'Supports PDF, DOCX, XLS, XLSX, JPG, PNG',
+        mode_label:'Mode',mode_standard:'Standard',mode_enhanced:'Enhanced',
+        mode_hint_standard:'Keep images + OCR text. Works on any computer.',
+        mode_hint_enhanced:'Adds AI image descriptions. Requires NVIDIA GPU (10GB+ VRAM).',
+        path_label:'Output path',browse:'Browse',open:'Open',
+        convert:'Convert',converting:'Converting...',browsing:'Selecting...',
+        results:'Results',
+        status_idle:'Idle',status_processing:'Processing',status_done:'Complete',status_error:'Failed',
+        status_ready:'Ready. Upload files to begin.',status_no_files:'Please add files first.',
+        status_no_valid:'No valid files.',
+        status_enhanced_unavailable:'Enhanced mode unavailable. Use Standard mode.',
+        status_output:'Output folder',result_success:'OK',result_fail:'FAIL',
+        skip_doc_hint:'.doc file skipped. Save as .docx in Word first.',
+        gpu_available:'Enhanced mode available',gpu_unavailable:'Standard mode only',
+        file_waiting:'Waiting',file_processing:'Processing',file_success:'Done',file_fail:'Failed',
+        footer:'DocFlow — All processing happens locally. Your documents never leave your machine.',
+    }
+};
+
+function t(key){return(I18N[currentLang]||{})[key]||key;}
+
+function setLang(lang){
+    currentLang=lang;
+    document.documentElement.lang=lang;
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const k=el.dataset.i18n;
+        if(I18N[lang][k])el.textContent=I18N[lang][k];
+    });
+    document.querySelectorAll('.lang-toggle button').forEach(b=>{
+        b.classList.toggle('active',b.dataset.lang===lang);
+    });
+    updateModeHint();
+    renderGpuStatus();
+    updateStatusBadge();
+    const bb=document.getElementById('browseBtn');
+    bb.textContent=bb.disabled?t('browsing'):t('browse');
+    const cb=document.getElementById('convertBtn');
+    cb.textContent=cb.disabled?t('converting'):t('convert');
+    if(selectedFiles.length>0){
+        document.getElementById('fileCount').textContent=selectedFiles.length+' '+t('file_count');
+    }
+}
+
+// ── System info ──
+async function loadSystemInfo(){
+    try{
+        const r=await fetch('/api/system');
+        const d=await r.json();
+        gpuInfo={available:d.enhanced_available,name:d.gpu_name||''};
+        document.getElementById('outputPath').value=d.default_output||'output';
+    }catch(e){
+        console.error('System info failed:',e);
+        document.getElementById('outputPath').value='output';
+    }
+    renderGpuStatus();
+}
+
+function renderGpuStatus(){
+    const el=document.getElementById('gpuStatus');
+    if(gpuInfo.available){
+        el.innerHTML='<span class="dot on"></span><span>'+t('gpu_available')+
+            (gpuInfo.name?' ('+gpuInfo.name+')':'')+'</span>';
+    }else{
+        el.innerHTML='<span class="dot off"></span><span>'+t('gpu_unavailable')+'</span>';
+    }
+}
+
+// ── File handling ──
+function setupDropZone(){
+    const dz=document.getElementById('dropZone');
+    const fi=document.getElementById('fileInput');
+    dz.addEventListener('click',()=>{if(!isConverting)fi.click();});
+    fi.addEventListener('change',e=>{handleFiles(e.target.files);fi.value='';});
+    dz.addEventListener('dragenter',e=>{e.preventDefault();if(!isConverting)dz.classList.add('dragover');});
+    dz.addEventListener('dragover',e=>e.preventDefault());
+    dz.addEventListener('dragleave',e=>{e.preventDefault();dz.classList.remove('dragover');});
+    dz.addEventListener('drop',e=>{
+        e.preventDefault();dz.classList.remove('dragover');
+        if(!isConverting)handleFiles(e.dataTransfer.files);
+    });
+}
+
+function handleFiles(fl){
+    const valid=['.pdf','.docx','.doc','.xls','.xlsx','.jpg','.jpeg','.png','.gif','.bmp','.webp','.tiff','.tif'];
+    for(const f of fl){
+        const ext='.'+f.name.split('.').pop().toLowerCase();
+        if(valid.includes(ext))selectedFiles.push(f);
+    }
+    renderFileList();
+}
+
+function renderFileList(){
+    const list=document.getElementById('fileList');
+    const count=document.getElementById('fileCount');
+    if(selectedFiles.length===0){list.innerHTML='';count.textContent='';return;}
+    count.textContent=selectedFiles.length+' '+t('file_count');
+    list.innerHTML=selectedFiles.map((f,i)=>{
+        const ext=f.name.split('.').pop().toUpperCase();
+        return '<div class="file-item"><span class="ext">'+ext+'</span>'+
+            '<span class="name">'+escapeHtml(f.name)+'</span>'+
+            '<button class="remove" onclick="removeFile('+i+')">&times;</button></div>';
+    }).join('');
+}
+
+function removeFile(i){selectedFiles.splice(i,1);renderFileList();}
+
+// ── Mode toggle ──
+function setupModeToggle(){
+    document.querySelectorAll('.mode-toggle button').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            const mode=btn.dataset.mode;
+            if(mode==='enhanced'&&!gpuInfo.available){
+                showEmptyState(t('status_enhanced_unavailable'));
+                return;
+            }
+            currentMode=mode;
+            document.querySelectorAll('.mode-toggle button').forEach(b=>{
+                b.classList.toggle('active',b.dataset.mode===mode);
+            });
+            updateModeHint();
+        });
+    });
+}
+
+function updateModeHint(){
+    document.getElementById('modeHint').textContent=
+        currentMode==='standard'?t('mode_hint_standard'):t('mode_hint_enhanced');
+}
+
+// ── Path ──
+async function browseFolder(){
+    const input=document.getElementById('outputPath');
+    const btn=document.getElementById('browseBtn');
+    btn.disabled=true;btn.textContent=t('browsing');
+    try{
+        const r=await fetch('/api/browse',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({path:input.value})
+        });
+        const d=await r.json();
+        if(d.path)input.value=d.path;
+    }catch(e){console.error('Browse failed:',e);}
+    finally{btn.disabled=false;btn.textContent=t('browse');}
+}
+
+async function openFolder(){
+    const p=document.getElementById('outputPath').value;
+    if(!p)return;
+    try{await fetch('/api/open_folder',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({path:p})});}catch(e){console.error('Open failed:',e);}
+}
+
+// ── Convert ──
+async function startConversion(){
+    if(selectedFiles.length===0){
+        showEmptyState(t('status_no_files'));
+        return;
+    }
+    isConverting=true;
+    setConvertingUI(true);
+    currentStatus='processing';
+    updateStatusBadge();
+
+    const fd=new FormData();
+    selectedFiles.forEach(f=>fd.append('files',f));
+    fd.append('mode',currentMode);
+    fd.append('output_dir',document.getElementById('outputPath').value);
+    fd.append('lang',currentLang);
+
+    try{
+        const r=await fetch('/api/convert',{method:'POST',body:fd});
+        const d=await r.json();
+        if(d.error){
+            showEmptyState(d.error);
+            isConverting=false;setConvertingUI(false);
+            currentStatus='idle';updateStatusBadge();
+            return;
+        }
+        pollProgress(d.job_id);
+    }catch(e){
+        showEmptyState(t('status_error')+': '+e.message);
+        isConverting=false;setConvertingUI(false);
+        currentStatus='error';updateStatusBadge();
+    }
+}
+
+function setConvertingUI(c){
+    const btn=document.getElementById('convertBtn');
+    const dz=document.getElementById('dropZone');
+    const pw=document.getElementById('progressWrap');
+    if(c){
+        btn.disabled=true;btn.textContent=t('converting');
+        dz.style.pointerEvents='none';dz.style.opacity='0.5';
+        pw.style.display='block';
+        document.getElementById('progressFill').style.width='0%';
+        document.getElementById('progressText').textContent='';
+    }else{
+        btn.disabled=false;btn.textContent=t('convert');
+        dz.style.pointerEvents='';dz.style.opacity='';
+    }
+}
+
+function renderFileResults(files){
+    const body=document.getElementById('rightBody');
+    let html='';
+    files.forEach(f=>{
+        const st=f.status||'waiting';
+        let icon='',statusText='';
+        if(st==='waiting'){icon='<span class="spinner" style="opacity:.3">&#9679;</span>';statusText=t('file_waiting');}
+        else if(st==='processing'){icon='<span class="spinner"></span>';statusText=t('file_processing');}
+        else if(st==='success'){icon='&#10003;';statusText=t('file_success');}
+        else if(st==='fail'){icon='&#10007;';statusText=t('file_fail');}
+        html+='<div class="file-result">'+
+            '<div class="top">'+
+            '<span class="status-icon '+st+'">'+icon+'</span>'+
+            '<span class="fname">'+escapeHtml(f.name)+'</span>'+
+            '<span class="status-text">'+escapeHtml(statusText)+'</span></div>';
+        if(f.error){
+            html+='<div class="detail error">'+escapeHtml(f.error)+'</div>';
+        }else if(f.message){
+            html+='<div class="detail">'+escapeHtml(f.message)+'</div>';
+        }
+        html+='</div>';
+    });
+    body.innerHTML=html;
+}
+
+function pollProgress(jobId){
+    if(pollTimer)clearInterval(pollTimer);
+    pollTimer=setInterval(async()=>{
+        try{
+            const r=await fetch('/api/progress/'+jobId);
+            const d=await r.json();
+            document.getElementById('progressFill').style.width=
+                Math.round((d.progress||0)*100)+'%';
+            document.getElementById('progressText').textContent=d.message||'';
+
+            // Render per-file status if available
+            if(d.files&&d.files.length>0){
+                renderFileResults(d.files);
+            }
+
+            if(d.status==='done'||d.status==='error'){
+                clearInterval(pollTimer);pollTimer=null;
+                isConverting=false;setConvertingUI(false);
+                if(d.status==='error'){
+                    currentStatus='error';updateStatusBadge();
+                    showEmptyState(d.message||t('status_error'));
+                }else{
+                    currentStatus='done';updateStatusBadge();
+                    if(d.skipped_doc&&d.skipped_doc.length>0){
+                        const body=document.getElementById('rightBody');
+                        const skip='<div class="skip-hint">'+escapeHtml(t('skip_doc_hint'))+'</div>';
+                        body.insertAdjacentHTML('afterbegin',skip);
+                    }
+                    if(d.output_dir){
+                        const body=document.getElementById('rightBody');
+                        const link=document.createElement('div');
+                        link.className='output-link';
+                        link.innerHTML=t('status_output')+': <a>'+escapeHtml(d.output_dir)+'</a>';
+                        link.querySelector('a').addEventListener('click',()=>openOutputFolder(d.output_dir));
+                        body.appendChild(link);
+                    }
+                }
+            }
+        }catch(e){console.error('Poll failed:',e);}
+    },500);
+}
+
+function showEmptyState(msg){
+    document.getElementById('rightBody').innerHTML=
+        '<div class="empty-state"><div class="text">'+escapeHtml(msg)+'</div></div>';
+}
+
+function updateStatusBadge(){
+    const b=document.getElementById('statusBadge');
+    const map={
+        idle:{text:t('status_idle'),cls:''},
+        processing:{text:t('status_processing'),cls:'processing'},
+        done:{text:t('status_done'),cls:'done'},
+        error:{text:t('status_error'),cls:'error'},
+    };
+    const s=map[currentStatus]||map.idle;
+    b.textContent=s.text;
+    b.className='status-badge '+s.cls;
+}
+
+async function openOutputFolder(path){
+    try{await fetch('/api/open_folder',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({path})});}catch(e){console.error('Open failed:',e);}
+}
+
+// ── Utility ──
+function escapeHtml(str){
+    const d=document.createElement('div');
+    d.textContent=String(str);
+    return d.innerHTML;
+}
+
+// ── Init ──
+function init(){
+    setLang('zh');
+    loadSystemInfo();
+    setupDropZone();
+    setupModeToggle();
+    document.getElementById('browseBtn').addEventListener('click',browseFolder);
+    document.getElementById('openBtn').addEventListener('click',openFolder);
+    document.getElementById('convertBtn').addEventListener('click',startConversion);
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

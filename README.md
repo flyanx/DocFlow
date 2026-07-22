@@ -10,17 +10,15 @@
 [![Flask](https://img.shields.io/badge/Framework-Flask-000000.svg)](https://flask.palletsprojects.com/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg)](#contributing)
 
-**轻松转为 DOCX · 100% 本地运行 · 隐私优先**
+**100% Local · Privacy-First · No Document Uploads**
 
-[功能特性](#-features) · [快速开始](#-quick-start) · [使用指南](#-usage) · [FAQ](#-faq)
+[English](README.md) · [简体中文](README.zh-CN.md)
 
 </div>
 
 ---
 
 DocFlow is a **zero-code, fully local** document conversion tool that batch-converts **PDF, images, and Office documents** into editable **DOCX** files. It features **OCR text recognition** (RapidOCR), **AI image description** (Qwen-VL), and **table restoration** — all running locally with **no document ever leaving your machine**.
-
-DocFlow 是一个**零配置、纯本地运行**的文档智能转换工具，可将 PDF、图片、Office 文档批量转换为可编辑的 DOCX 格式。核心能力包括 **OCR 文字识别**（RapidOCR）、**AI 图片语义描述**（Qwen-VL）以及**表格还原**，所有处理均在本地完成，文档**不会上传到任何服务器**。
 
 ![DocFlow](assets/icon.jpg)
 
@@ -103,7 +101,8 @@ DocFlow/
 ├── install.bat             # One-click installer
 ├── requirements.txt        # Python dependencies
 ├── LICENSE                 # MIT License
-├── README.md               # You are here
+├── README.md               # English docs
+├── README.zh-CN.md         # Chinese docs
 ├── assets/                 # Icons & images
 ├── core/                   # Core conversion modules
 │   ├── converter.py        # Main converter (batch & single)
@@ -168,4 +167,4 @@ Contributions are welcome! Feel free to:
 
 </div>
 
-<!-- Keywords for search indexing: PDF to DOCX converter, document conversion, OCR, RapidOCR, Qwen-VL, batch convert PDF, image to DOCX, OCR Chinese, local document converter, offline PDF converter, python document conversion, Flask web app, python-docx, table recognition, image text extraction, 文档转换器, PDF转Word, 图片转Word, OCR文字识别, 批量转换文档, 本地文档处理, 隐私文档转换 -->
+<!-- Keywords: PDF to DOCX converter, document conversion, OCR, RapidOCR, Qwen-VL, batch convert PDF, image to DOCX, OCR Chinese, local document converter, offline PDF converter, python document conversion, Flask web app, python-docx, table recognition, image text extraction, PDF转Word, 图片转Word, OCR文字识别, 文档转换器 -->

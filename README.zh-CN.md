@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/icon.jpg" alt="DocFlow" width="200">
+
 # DocFlow
 
 **纯本地运行的文档智能转换工具 — 将 PDF、图片、Office 文档批量转为 DOCX**
@@ -19,8 +21,6 @@
 ---
 
 DocFlow 是一个**零配置、纯本地运行**的文档智能转换工具，可将 PDF、图片、Office 文档批量转换为可编辑的 DOCX 格式。核心能力包括 **OCR 文字识别**（RapidOCR）、**AI 图片语义描述**（Qwen-VL）以及**表格还原**，所有处理均在本地完成，文档**不会上传到任何服务器**。
-
-<img src="assets/icon.jpg" alt="DocFlow" width="200">
 
 ## ✨ 功能特性
 

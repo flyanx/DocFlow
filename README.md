@@ -20,7 +20,7 @@
 
 DocFlow is a **zero-code, fully local** document conversion tool that batch-converts **PDF, images, and Office documents** into editable **DOCX** files. It features **OCR text recognition** (RapidOCR), **AI image description** (Qwen-VL), and **table restoration** — all running locally with **no document ever leaving your machine**.
 
-![DocFlow](assets/icon.jpg)
+<img src="assets/icon.jpg" alt="DocFlow" width="200">
 
 ## ✨ Features
 
